@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\LoginFormRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use App\Models\User;
 
 class AuthController extends Controller
 {
@@ -25,15 +26,42 @@ class AuthController extends Controller
     {
         $credentials = $request->only('email', 'password');
 
-        if(Auth::attempt($credentials)) {
-            $request->session()->regenerate();
+        // アカウントがロックされた弾く
+        $user = User::where('email', '=', $credentials['email'])->first();
 
-            return redirect()->route('home')->with('login_success', 'ログイン成功しました!');
+        if(!is_null($user)) {
+            if($user->locked_flg === 1) {
+                return back()->withErrors([
+                    'danger' => 'アカウントがロックされました。',
+                ]);
+            }
+            if(Auth::attempt($credentials)) {
+                $request->session()->regenerate();
+                if($user->error_count > 0) {
+                    // 成功したらエラーカウントを0にする
+                    $user->error_count = 0;
+                    $user->save();
+                }
+                return redirect()->route('home')->with('success', 'ログイン成功しました!');
+            }
+
+            // ログインに失敗したらエラーカウントを1増やす
+            $user->error_count = $user->error_count + 1;
+
+            // エラーカウントを6以上の場合はアカウントをロックします
+            if($user->error_count > 5) {
+                $user->locked_flg = 1;
+                $user->save();
+                return back()->withErrors([
+                    'danger' => 'アカウントがロックされました。解除したい場合は運営者に連絡してください。',
+                ]);
+            }
+            $user->save();
+
+            return back()->withErrors([
+                'danger' => 'メールアドレスかパスワードが間違っています。',
+            ]);
         }
-
-        return back()->withErrors([
-            'login_error' => 'メールアドレスかパスワードが間違っています。',
-        ]);
     }
 
     /**
@@ -50,6 +78,6 @@ class AuthController extends Controller
 
         $request->session()->regenerateToken();
 
-        return redirect()->route('login.show')->with('logout', 'ログアウトしました!');
+        return redirect()->route('login.show')->with('danger', 'ログアウトしました!');
     }
 }
