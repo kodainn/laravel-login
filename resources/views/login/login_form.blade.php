@@ -42,12 +42,12 @@
                 <li>{{ $error }}</li>
             @endforeach
 
-            <x-alert type="danger" :session="session('login_error')" />
+            <x-alert type="danger" :session="session('danger')" />
         </ul>
       </div>
       @endif
 
-      <x-alert type="danger" :session="session('logout')" />
+      <x-alert type="danger" :session="session('danger')" />
 
       <div class="form-floating">
         <input type="email" class="form-control" id="floatingInput" name="email" placeholder="name@example.com">
