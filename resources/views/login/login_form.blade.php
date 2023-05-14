@@ -12,6 +12,7 @@
     <!-- Scripts -->
     <script src="{{ asset('js/app.js') }}" defer></script>
     <!-- Style -->
+    <link rel="stylesheet" href="{{ asset('css/app.css') }}">
     <link rel="stylesheet" href="{{ asset('css/signin.css') }}">
     <style>
       .bd-placeholder-img {
@@ -28,12 +29,10 @@
         }
       }
     </style>
-
-    <link href="signin.css" rel="stylesheet">
 </head>
 <body class="text-center">
   <main class="form-signin">
-    <form action="{{ Route('login') }}" method="POST">
+    <form action="{{ route('login') }}" method="POST">
     @csrf
       <h1 class="h3 mb-3 fw-normal">ログインフォーム</h1>
       @if ($errors->any())
@@ -42,9 +41,14 @@
             @foreach ($errors->all() as $error)
                 <li>{{ $error }}</li>
             @endforeach
+
+            <x-alert type="danger" :session="session('login_error')" />
         </ul>
       </div>
       @endif
+
+      <x-alert type="danger" :session="session('logout')" />
+
       <div class="form-floating">
         <input type="email" class="form-control" id="floatingInput" name="email" placeholder="name@example.com">
       </div>
